@@ -30,7 +30,13 @@ const SignupPage: React.FC = () => {
       const data = await response.json();
 
       if (response.ok) {
-        navigate('/login');
+        // Log them in immediately
+        localStorage.setItem('user', JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          location: formData.location
+        }));
+        navigate('/dashboard');
       } else {
         setError(data.error || 'Signup failed');
       }

@@ -2,7 +2,8 @@
   "name": "Kisan Sahay",
   "description": "Empowering the roots of India with smart agricultural technology and real-time insights.",
   "requestFramePermissions": [
-    "camera"
+    "camera",
+    "geolocation"
   ],
   "majorCapabilities": [
     "Agricultural Diagnostics",

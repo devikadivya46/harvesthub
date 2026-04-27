@@ -1,19 +1,44 @@
-import React, { useState } from 'react';
-import { MapPin, Search, ChevronRight, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MapPin, Search, ChevronRight, TrendingUp, TrendingDown, Minus, Loader2 } from 'lucide-react';
 import { Card, Button } from '../components/ui/Base';
 import { Header } from '../components/Layout';
 import { cn } from '../lib/utils';
 
+interface CropPrice {
+  name: string;
+  mandi: string;
+  price: string;
+  change: string;
+  status: string;
+}
+
 export const MarketPricesPage: React.FC = () => {
   const [selectedCategory, setSelectedSelectedCategory] = useState('All');
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [crops, setCrops] = useState<CropPrice[]>([]);
 
-  const crops = [
-    { name: 'Wheat (Kanak)', mandi: 'Azadpur Mandi', price: '2,450', change: '+₹45', status: 'up' },
-    { name: 'Basmati Rice', mandi: 'Azadpur Mandi', price: '4,200', change: 'Stable', status: 'stable' },
-    { name: 'Onion (Nashik)', mandi: 'Azadpur Mandi', price: '1,850', change: '-₹120', status: 'down' },
-    { name: 'Cotton (Kapas)', mandi: 'Azadpur Mandi', price: '7,100', change: '+₹200', status: 'up' },
-    { name: 'Soybean', mandi: 'Azadpur Mandi', price: '5,400', change: 'Stable', status: 'stable' },
-  ];
+  const fetchPrices = async () => {
+    try {
+      const response = await fetch('/api/market-prices');
+      const data = await response.json();
+      setCrops(data);
+    } catch (err) {
+      console.error('Failed to fetch prices:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPrices();
+  }, []);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchPrices();
+  };
 
   const categories = ['All', 'Vegetables', 'Grains', 'Fruits', 'Spices'];
 
@@ -86,10 +111,24 @@ export const MarketPricesPage: React.FC = () => {
       <section className="space-y-4">
         <div className="flex justify-between items-end mb-4 px-1">
           <h3 className="text-2xl font-black text-zinc-900 uppercase tracking-tighter">Live Tracker</h3>
-          <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest bg-zinc-100 px-2 py-1 rounded-full">Updated 10m ago</span>
+          <button 
+            onClick={handleRefresh}
+            className={cn(
+              "text-[10px] font-black text-zinc-400 uppercase tracking-widest bg-zinc-100 px-3 py-1 rounded-full flex items-center gap-2 active:scale-95 transition-all",
+              refreshing && "animate-pulse bg-emerald-100 text-emerald-600"
+            )}
+          >
+            {refreshing ? 'Updating...' : 'Updated 10m ago'}
+            <span className={cn("material-symbols-outlined text-xs", refreshing && "animate-spin")}>refresh</span>
+          </button>
         </div>
 
-        {crops.map((crop, i) => (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <Loader2 className="w-10 h-10 animate-spin text-zinc-300" />
+            <p className="text-zinc-400 font-bold uppercase tracking-widest text-xs">Syncing with Mandis...</p>
+          </div>
+        ) : crops.map((crop, i) => (
           <Card key={i} className="flex items-center gap-4 py-6 pr-8 border-zinc-200 hover:border-zinc-400 transition-colors cursor-pointer group">
             <div className="w-16 h-16 rounded-2xl bg-zinc-50 border border-zinc-100 flex items-center justify-center shrink-0 group-hover:bg-zinc-900 group-hover:text-white transition-colors">
                <span className="material-symbols-outlined text-3xl font-light">
@@ -120,6 +159,11 @@ export const MarketPricesPage: React.FC = () => {
             </div>
           </Card>
         ))}
+        {!loading && crops.length === 0 && (
+          <div className="text-center py-10">
+            <p className="text-zinc-400 font-bold">No market data available.</p>
+          </div>
+        )}
       </section>
 
       <Button fullWidth variant="primary" className="h-16 font-black uppercase tracking-widest text-xs rounded-2xl mt-4">
