@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,100..900;1,100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-inter: "Inter", sans-serif;
+
+  /* Brand Colors - Bento Zinc Theme */
+  --color-surface: #f4f4f5;
+  --color-surface-dim: #e4e4e7;
+  --color-surface-bright: #fafafa;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f4f4f5;
+  --color-surface-container: #e4e4e7;
+  --color-surface-container-high: #d4d4d8;
+  --color-surface-container-highest: #a1a1aa;
+  --color-on-surface: #09090b;
+  --color-on-surface-variant: #52525b;
+  --color-inverse-surface: #18181b;
+  --color-inverse-on-surface: #f4f4f5;
+  --color-outline: #71717a;
+  --color-outline-variant: #e4e4e7;
+  --color-surface-tint: #18181b;
+  
+  --color-primary: #18181b;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #f4f4f5;
+  --color-on-primary-container: #18181b;
+  --color-inverse-primary: #ffffff;
+  
+  --color-secondary: #27272a;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #e4e4e7;
+  --color-on-secondary-container: #27272a;
+  
+  --color-tertiary: #3f3f46;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #f4f4f5;
+  --color-on-tertiary-container: #3f3f46;
+  
+  --color-error: #ef4444;
+  --color-on-error: #ffffff;
+  --color-error-container: #fee2e2;
+  --color-on-error-container: #991b1b;
+
+  /* Fixed Colors */
+  --color-primary-fixed: #e4e4e7;
+  --color-primary-fixed-dim: #d4d4d8;
+  --color-on-primary-fixed: #09090b;
+  --color-on-primary-fixed-variant: #27272a;
+  --color-secondary-fixed: #f4f4f5;
+  --color-secondary-fixed-dim: #e4e4e7;
+  --color-on-secondary-fixed: #09090b;
+  --color-on-secondary-fixed-variant: #3f3f46;
+  --color-tertiary-fixed: #f4f4f5;
+  --color-tertiary-fixed-dim: #e4e4e7;
+  --color-on-tertiary-fixed: #09090b;
+  --color-on-tertiary-fixed-variant: #52525b;
+
+  --color-background: #f4f4f5;
+  --color-on-background: #09090b;
+  --color-surface-variant: #f4f4f5;
+
+  /* Custom Spacing */
+  --spacing-margin-mobile: 16px;
+  --spacing-gutter-mobile: 12px;
+
+  /* Custom Radii - Bento Grid Standard */
+  --radius-2xl: 2rem;
+  --radius-xl: 1.5rem;
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+
+  /* Shadows - Zinc Tint */
+  --shadow-tactile: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-organic: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+@layer base {
+  body {
+    @apply bg-background text-on-background font-sans antialiased;
+  }
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

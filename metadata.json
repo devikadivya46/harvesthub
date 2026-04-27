@@ -1,0 +1,12 @@
+{
+  "name": "Kisan Sahay",
+  "description": "Empowering the roots of India with smart agricultural technology and real-time insights.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "Agricultural Diagnostics",
+    "Market Price Monitoring",
+    "Expert Advisory"
+  ]
+}
