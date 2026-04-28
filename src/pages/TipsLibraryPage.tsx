@@ -6,80 +6,99 @@ import { cn } from '../lib/utils';
 
 export const TipsLibraryPage: React.FC = () => {
   const articles = [
-    { title: 'Natural Fertilizer Prep', time: '5 min read', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDDM0xvK6jVBquQBnDzeLx-M1Z-LWilaaQXKFTqic1Or4O8TAWwTeUyESTq3kpopwh4UWt1J4KO-JeP9ndQg_ilmFvoXuAW3PJn-UQzGhWH7j-fnqe58BojhzJ077iIAqpJJI9psoLuZVWIWxbDdaQcgzmHeak4fZvOLBjlzo0WN3tQtIa_ZkiVbsyRtndAZCPZ3nT8yw2Aq5uAwPPGSeK2t7AjZ7nbLLZWk2E2maY6tYDq7mIQ637KVOcQG98puWrIdDenroOl0iOZ' },
-    { title: 'Drip Irrigation Basics', time: '8 min read', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBRYJm3ZOs1OFZ1JZPhixqeiaYmHba_gSGadgkHoPA62IkNE4XYB94dy8e1N7ie3TVUwzh1Yo8NB3Bs9yePaEfuFhzVHjLzyy1Am6RdyMQPahP1i-Ld0I0msutbDuEmUl_A4VQIW_YeZ9c1IFa_oPd-DgysHtV9PA3onWHtlRhwNwkcyb-WqdcK5SKluDG0Jw1n2M-aV41DjnAxbkuEe6eZeFEjQqlZOxaN5oMYh5WyCe-0ZK52ikZe2tsukzdJNpq2lQO-eUjPpsJV' },
-    { title: 'Companion Planting', time: '6 min read', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBkyj0p4gMKjBLwEB-JxnLt7CrUMLk_LzNs0Xvke6PXByT5sq-m5Scy4Ozq0QWZbML-5_Wm02SaLhnkJ4KIRQkReJSZAamcxRZhB21JAge7Wa37BA2fuPU8gBQ94lnfqu0bkAJsrEJA9qEs9xurqUYUyBT9YlcAmKwplkF-Mufk9aSf6_aS3_Ps5toBgLwGsYqSRqSA7MTdqiNeLfp-xfkoUNhYLlkS533roYsUL7AqIEqpC-c4L6wZYn1mR-zhmcfuKj7MuV5UCbht' }
+    { title: 'Natural Fertilizer Prep', time: '5 min read', category: 'Organic', image: 'https://images.unsplash.com/photo-1592911299951-e5f884633211?auto=format&fit=crop&q=80&w=400' },
+    { title: 'Drip Irrigation Basics', time: '8 min read', category: 'Irrigation', image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=400' },
+    { title: 'Companion Planting', time: '6 min read', category: 'Soil Health', image: 'https://images.unsplash.com/photo-1622383529984-754f9a562867?auto=format&fit=crop&q=80&w=400' }
   ];
 
   return (
-    <div className="pt-20 px-4 flex flex-col gap-6 max-w-2xl mx-auto pb-32">
-      <Header title="Tips Library" showBack />
+    <div className="min-h-screen pt-20 px-6 flex flex-col gap-8 max-w-2xl mx-auto pb-40">
+      <Header title="Knowledge" showBack />
 
-      {/* Search Bar */}
+      {/* Editorial Header */}
+      <section className="flex flex-col gap-2">
+         <h2 className="text-3xl font-display font-black text-agri-primary tracking-tighter uppercase">Agri-Intelligence</h2>
+         <p className="text-sm font-medium text-zinc-500 uppercase tracking-tight">Curated insights from global agricultural laboratories.</p>
+      </section>
+
+      {/* Feature Search */}
       <section>
-        <div className="relative">
+        <div className="relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 group-focus-within:text-agri-primary transition-colors" />
           <input 
             type="text" 
-            placeholder="Search for farming tips..." 
-            className="w-full h-12 pl-12 pr-4 rounded-xl border border-outline-variant bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-semibold outline-none shadow-sm"
+            placeholder="Query library..." 
+            className="w-full h-14 pl-12 pr-4 bg-white border border-agri-border rounded-2xl text-sm font-bold focus:ring-2 focus:ring-agri-accent/20 outline-none transition-all shadow-sm"
           />
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-outline" />
         </div>
       </section>
 
-      {/* Category Chips */}
-      <section className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1">
-        <button className="px-6 py-2 rounded-full bg-primary text-on-primary font-bold text-sm shadow-sm whitespace-nowrap">All</button>
-        <button className="px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-bold text-sm hover:bg-surface-variant transition-colors whitespace-nowrap">Organic</button>
-        <button className="px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-bold text-sm hover:bg-surface-variant transition-colors whitespace-nowrap">Soil Health</button>
-        <button className="px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-bold text-sm hover:bg-surface-variant transition-colors whitespace-nowrap">Pest Control</button>
-        <button className="px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-bold text-sm hover:bg-surface-variant transition-colors whitespace-nowrap">Irrigation</button>
-      </section>
-
-      {/* Tip of the Day */}
-      <section>
-        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-           <Star className="w-5 h-5 text-primary fill-primary" />
-           Tip of the Day
-        </h2>
-        <Card padded={false} className="shadow-organic border-primary/10">
-          <img 
-            className="w-full h-48 object-cover" 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGsgjxgFblrY2Xt-B_Q3s6hW_jPBJKbyPf0e2jY09Sax00KCMmeiKjsuNMLm6-v3kpw9hbc5Z5mjsLZXR1K53d3RilV-RWtQxuf0znEcU_WYGyxte6BSA9uaBkxmfNJlRYMKp3a-AqHpoK5gflkRMKyjNRhu1u9oHFf-rbhgXI-XmollnITG2ss2VNZ1KVp9D3UTXuwoHE73xTviD2GTtBNaQ5xfxa8qRSRCOsttn2347Q4dh3fbBsK2CVIRzBRZlBlHFF5-ioulng" 
-            alt="Watering seedlings" 
-          />
-          <div className="p-6">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2 py-1 rounded">Expert Recommendation</span>
-            </div>
-            <h3 className="text-2xl font-bold text-on-surface mb-2">Optimize Morning Watering</h3>
-            <p className="text-sm text-on-surface-variant leading-relaxed font-medium">Watering your crops before 9:00 AM reduces evaporation and prevents fungal growth by allowing leaves to dry during the day.</p>
-          </div>
-        </Card>
-      </section>
-
-      {/* Educational Articles */}
-      <section className="space-y-4">
-        <h2 className="text-xl font-bold mb-4">Educational Articles</h2>
-        {articles.map((article, i) => (
-          <Card key={i} className="flex gap-4 p-4 items-center shadow-sm hover:shadow-md transition-shadow cursor-pointer border-transparent hover:border-primary/20">
-            <img src={article.image} alt={article.title} className="w-24 h-24 rounded-lg object-cover flex-shrink-0" />
-            <div className="flex-grow min-w-0">
-              <h4 className="text-lg font-bold text-on-surface mb-2 truncate leading-tight">{article.title}</h4>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1 text-on-surface-variant">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-xs font-bold uppercase tracking-tight">{article.time}</span>
-                </div>
-                <button className="flex items-center gap-1 text-primary font-bold text-sm">
-                  <Volume2 className="w-4 h-4 fill-primary/20" />
-                  Listen
-                </button>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-outline shrink-0" />
-          </Card>
+      {/* Filter Matrix */}
+      <section className="flex gap-2 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
+        {['Latest', 'Soil Health', 'Irrigation', 'Bio-Control', 'Harvesting'].map((cat, i) => (
+          <button 
+            key={cat}
+            className={cn(
+              "px-5 py-3 rounded-2xl whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-all border",
+              i === 0 ? "bg-agri-accent text-white border-agri-accent shadow-lg shadow-agri-accent/20" : "bg-white text-zinc-500 border-agri-border hover:border-agri-accent"
+            )}
+          >
+            {cat}
+          </button>
         ))}
+      </section>
+
+      {/* Hero Insight */}
+      <section className="flex flex-col gap-4">
+        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 px-1">Curated Selection</h3>
+        <div className="bg-white border border-agri-border rounded-[2.5rem] overflow-hidden shadow-xl shadow-agri-primary/5 hover:border-agri-accent transition-all group cursor-pointer">
+           <div className="relative h-56 overflow-hidden">
+              <img 
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                src="https://images.unsplash.com/photo-1560493676-04071c5f4b52?auto=format&fit=crop&q=80&w=600" 
+                alt="Expert recommendation" 
+              />
+              <div className="absolute top-6 left-6 flex items-center gap-2">
+                 <div className="bg-agri-primary/80 backdrop-blur-md text-white px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/20">Essential Reading</div>
+              </div>
+           </div>
+           <div className="p-8">
+              <h4 className="text-2xl font-display font-black text-zinc-800 uppercase tracking-tighter mb-2 group-hover:text-agri-primary transition-colors">Precision Soil Diagnostics</h4>
+              <p className="text-sm font-medium text-zinc-500 leading-relaxed line-clamp-2">Learn techniques to balance microbial activity with mineral supplements for 30% yield optimization.</p>
+              <div className="flex items-center gap-4 mt-6 pt-6 border-t border-agri-surface">
+                 <div className="flex items-center gap-2">
+                    <Clock className="w-3 h-3 text-agri-accent" />
+                    <span className="text-[10px] font-black uppercase text-zinc-400">12m Read</span>
+                 </div>
+                 <div className="flex items-center gap-2">
+                    <Volume2 className="w-3 h-3 text-agri-primary" />
+                    <span className="text-[10px] font-black uppercase text-agri-primary">Listen Audio</span>
+                 </div>
+              </div>
+           </div>
+        </div>
+      </section>
+
+      {/* Article Feed */}
+      <section className="flex flex-col gap-4 pb-12">
+        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 px-1">Research Papers</h3>
+        <div className="grid grid-cols-1 gap-4">
+          {articles.map((article, i) => (
+            <div key={i} className="bg-white border border-agri-border p-4 rounded-3xl flex items-center gap-5 hover:border-agri-primary transition-all group cursor-pointer shadow-sm">
+               <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 shadow-inner">
+                  <img src={article.image} alt={article.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+               </div>
+               <div className="flex-1 min-w-0">
+                  <span className="text-[9px] font-black text-agri-accent uppercase tracking-widest">{article.category}</span>
+                  <h4 className="text-lg font-display font-black text-zinc-800 uppercase tracking-tighter truncate leading-tight group-hover:text-agri-primary transition-colors">{article.title}</h4>
+                  <div className="flex items-center gap-3 mt-2">
+                     <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{article.time}</span>
+                     <ChevronRight className="w-4 h-4 text-zinc-300 group-hover:translate-x-1 group-hover:text-agri-primary transition-all" />
+                  </div>
+               </div>
+            </div>
+          ))}
+        </div>
       </section>
     </div>
   );

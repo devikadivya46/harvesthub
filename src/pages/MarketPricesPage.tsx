@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Search, ChevronRight, TrendingUp, TrendingDown, Minus, Loader2 } from 'lucide-react';
+import { MapPin, Search, ChevronRight, TrendingUp, TrendingDown, Minus, Loader2, X } from 'lucide-react';
 import { Card, Button } from '../components/ui/Base';
 import { Header } from '../components/Layout';
 import { cn } from '../lib/utils';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface CropPrice {
   name: string;
@@ -13,163 +15,258 @@ interface CropPrice {
 }
 
 export const MarketPricesPage: React.FC = () => {
-  const [selectedCategory, setSelectedSelectedCategory] = useState('All');
-  const [refreshing, setRefreshing] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedMandi, setSelectedMandi] = useState('All India (Latest)');
   const [loading, setLoading] = useState(true);
-  const [crops, setCrops] = useState<CropPrice[]>([]);
+  const [crops, setCrops] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [forecast, setForecast] = useState<string | null>(null);
+  const [loadingForecast, setLoadingForecast] = useState(false);
+  const [showForecast, setShowForecast] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [isFallback, setIsFallback] = useState(false);
+
+  const getCategory = (name: string): string => {
+    const n = name.toLowerCase();
+    const categoriesMap: { [key: string]: string[] } = {
+      'Vegetables': ['onion', 'potato', 'tomato', 'brinjal', 'cauliflower', 'cabbage', 'cucumber', 'carrot', 'radish', 'gourd', 'bhindi', 'okra', 'peas', 'lemon', 'bitter', 'bottle', 'capsicum', 'drumstick', 'garlic', 'chilli', 'ginger', 'beans', 'pumpkin', 'raddish', 'beetroot', 'tinda', 'peas', 'coriander', 'mint', 'methi', 'spinach', 'arvi', 'colocasia', 'yam'],
+      'Grains': ['wheat', 'rice', 'paddy', 'maize', 'jowar', 'bajra', 'ragi', 'gram', 'arhar', 'tur', 'moong', 'urad', 'masoor', 'soyabean', 'mustard', 'sesamum', 'lentil', 'millet', 'barley', 'groundnut', 'corn', 'sunflower', 'canola', 'dhal', 'pulses', 'mung'],
+      'Fruits': ['apple', 'banana', 'mango', 'orange', 'grape', 'papaya', 'pomegranate', 'guava', 'watermelon', 'pineapple', 'mosambi', 'lime', 'grapes', 'sapota', 'pear', 'plum', 'kiwi', 'musk', 'melon', 'custard', 'litchi', 'strawberry'],
+      'Spices': ['turmeric', 'cumin', 'cardamom', 'pepper', 'coriander', 'fennel', 'clove', 'ajwain', 'isabgol', 'tamarind', 'methi', 'suva', 'cinnamon', 'jeera', 'dry', 'chillies', 'nutmeg', 'mace', 'aniseed']
+    };
+    for (const [cat, keywords] of Object.entries(categoriesMap)) {
+      if (keywords.some(k => n.includes(k))) return cat;
+    }
+    return 'Other';
+  };
+
+  const filteredCrops = crops.filter(crop => {
+    const matchesCategory = selectedCategory === 'All' || getCategory(crop.name) === selectedCategory;
+    const matchesSearch = crop.name.toLowerCase().includes(searchText.toLowerCase()) || 
+                         crop.mandi.toLowerCase().includes(searchText.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const fetchPrices = async () => {
+    setLoading(true);
     try {
-      const response = await fetch('/api/market-prices');
+      let url = '/api/market-prices';
+      if (selectedMandi !== 'All India (Latest)') {
+        const mandiParts = selectedMandi.split(', ');
+        const marketName = mandiParts[0].replace(' Mandi', '').replace(' APMC', '');
+        const stateName = mandiParts[1];
+        url += `?market=${encodeURIComponent(marketName)}&state=${encodeURIComponent(stateName)}`;
+      }
+      const response = await fetch(url);
       const data = await response.json();
-      setCrops(data);
-    } catch (err) {
-      console.error('Failed to fetch prices:', err);
+      
+      if (data.error && !data.isFallback) {
+        setError(data.error);
+        setCrops([]);
+        setIsFallback(false);
+      } else {
+        setError(null);
+        setCrops(data.records || data);
+        setIsFallback(!!data.isFallback);
+      }
+    } catch (err: any) {
+      setError('Connection error. Using predictive pricing.');
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     fetchPrices();
-  }, []);
+  }, [selectedMandi]);
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    fetchPrices();
+  const getForecast = async () => {
+    if (crops.length === 0) return;
+    setLoadingForecast(true);
+    setShowForecast(true);
+    try {
+      const response = await fetch('/api/market-forecast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ crops })
+      });
+      const data = await response.json();
+      setForecast(data.forecast);
+    } catch (err: any) {
+      setForecast('### ⚠️ Forecast System Offline\n\nPlease check your internet connection or API settings.');
+    } finally {
+      setLoadingForecast(false);
+    }
   };
 
-  const categories = ['All', 'Vegetables', 'Grains', 'Fruits', 'Spices'];
-
   return (
-    <div className="pt-20 px-4 flex flex-col gap-6 max-w-2xl mx-auto pb-32">
-      <Header title="Market Prices" showBack />
+    <div className="min-h-screen pt-20 px-6 flex flex-col gap-6 max-w-2xl mx-auto pb-40">
+      <Header title="Market Intelligence" showBack />
 
-      {/* Mandi Selector */}
-      <section>
-        <Card className="flex flex-col gap-2 !p-6">
-          <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">Select Delivery Hub</label>
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-              <MapPin className="w-5 h-5 text-zinc-400" />
-            </div>
-            <select className="w-full h-14 pl-12 pr-4 bg-zinc-50 border border-zinc-200 rounded-2xl font-bold text-zinc-900 focus:ring-2 focus:ring-zinc-900 outline-none appearance-none transition-all cursor-pointer hover:bg-zinc-100">
-              <option>Azadpur Mandi, Delhi</option>
-              <option>Vashi APMC, Mumbai</option>
-              <option>Koyambedu, Chennai</option>
-              <option>Sardarganj Mandi, Gujarat</option>
-              <option>Gultekdi Mandi, Pune</option>
-            </select>
-            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-              <span className="material-symbols-outlined text-zinc-400">expand_more</span>
-            </div>
+      {/* Hero Stats Card */}
+      <section className="bg-agri-primary rounded-3xl p-6 text-white relative overflow-hidden shadow-lg shadow-agri-primary/10">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-4">
+             <div className="bg-white/20 p-1.5 rounded-lg backdrop-blur-md">
+                <TrendingUp className="w-4 h-4 text-white" />
+             </div>
+             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Live Market Overview</span>
           </div>
-        </Card>
-      </section>
-
-      {/* Market Trends Banner - Zinc Style */}
-      <section>
-        <div className="relative overflow-hidden rounded-[2rem] h-32 bg-zinc-900 text-white flex items-center px-8 shadow-xl border border-zinc-800">
-          <div className="z-10 relative max-w-[70%]">
-            <h2 className="text-xl font-bold leading-tight mb-1 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-emerald-400" />
-              Price Rally
-            </h2>
-            <p className="text-xs text-zinc-400 font-medium uppercase tracking-widest">Grains have surged by 4.2% in northern hubs today.</p>
-          </div>
-          <div className="absolute right-0 top-0 h-full w-1/2 overflow-hidden">
-            <img 
-              className="object-cover h-full w-full opacity-20" 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuC18rIy7Xr-TociFJRu47bKJWqT9cnhivhS7gfLmDsub0Q9fTniCvORtH-xZy9Uu_cuO-EnViy_knRxDpfO0MgkQI3DEKBbhfZkSItv5kji3nTFPxSsxokriwVY976AXvzHuReptmcBeW6UMsgpgG87K2sU5ZPsWR2Vnl0qavFfl9YAvoOpssrbhsdYuMgP1WxEO5DkgjCbbF4cCqNlBRtOU7nKFZJveoWeCn7Kn_DLfceObU1RRYzVFHtnB49J8RS7unH8sIDcEw0N" 
-              alt="Wheat Field" 
-            />
-            <div className="absolute inset-0 bg-gradient-to-l from-zinc-900 via-transparent to-transparent"></div>
+          <div className="flex justify-between items-end">
+             <div>
+                <p className="text-3xl font-display font-black tracking-tight">Agri-Hub</p>
+                <p className="text-sm text-white/70 font-medium">{selectedMandi.split(',')[0]}</p>
+             </div>
+             <button 
+              onClick={getForecast}
+              className="bg-white text-agri-primary px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-agri-accent hover:text-white transition-all shadow-sm active:scale-95"
+             >
+                Get AI Forecast
+             </button>
           </div>
         </div>
       </section>
 
-      {/* Filter Chips - Zinc Style */}
-      <section className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-4 px-4">
-        {categories.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setSelectedSelectedCategory(cat)}
-            className={cn(
-              "px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest whitespace-nowrap active:scale-95 transition-all shadow-sm border",
-              selectedCategory === cat 
-                ? "bg-zinc-900 text-white border-zinc-900" 
-                : "bg-white text-zinc-500 border-zinc-200 hover:border-zinc-400"
-            )}
-          >
-            {cat}
-          </button>
-        ))}
+      {/* Select Location Scroller */}
+      <section className="flex flex-col gap-3">
+        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 px-1">Select Active Mandi</h3>
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+          {['All India (Latest)', 'Azadpur Mandi, Delhi', 'Vashi APMC, Mumbai', 'Koyambedu, Tamil Nadu', 'Indore APMC, Madhya Pradesh', 'Gultekdi Mandi, Maharashtra'].map(m => (
+            <button
+              key={m}
+              onClick={() => setSelectedMandi(m)}
+              className={cn(
+                "px-5 py-3 rounded-2xl whitespace-nowrap text-xs font-bold transition-all border shrink-0 shadow-sm",
+                selectedMandi === m 
+                  ? "bg-agri-primary text-white border-agri-primary" 
+                  : "bg-white text-zinc-500 border-agri-border hover:border-agri-accent"
+              )}
+            >
+              {m.split(',')[0]}
+            </button>
+          ))}
+        </div>
+      </section>
+      
+      {/* Search & Filter */}
+      <section className="flex flex-col gap-4">
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
+          <input 
+            type="text" 
+            placeholder="Search crop or grade..." 
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="w-full h-14 pl-12 pr-4 bg-white border border-agri-border rounded-2xl text-sm font-medium focus:ring-2 focus:ring-agri-accent/20 outline-none transition-all shadow-sm"
+          />
+        </div>
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          {['All', 'Grains', 'Vegetables', 'Fruits', 'Spices'].map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={cn(
+                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border",
+                selectedCategory === cat 
+                  ? "bg-agri-accent text-white border-agri-accent" 
+                  : "bg-agri-surface text-zinc-400 border-agri-border"
+              )}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </section>
 
-      {/* Live Prices List */}
-      <section className="space-y-4">
-        <div className="flex justify-between items-end mb-4 px-1">
-          <h3 className="text-2xl font-black text-zinc-900 uppercase tracking-tighter">Live Tracker</h3>
-          <button 
-            onClick={handleRefresh}
-            className={cn(
-              "text-[10px] font-black text-zinc-400 uppercase tracking-widest bg-zinc-100 px-3 py-1 rounded-full flex items-center gap-2 active:scale-95 transition-all",
-              refreshing && "animate-pulse bg-emerald-100 text-emerald-600"
-            )}
-          >
-            {refreshing ? 'Updating...' : 'Updated 10m ago'}
-            <span className={cn("material-symbols-outlined text-xs", refreshing && "animate-spin")}>refresh</span>
-          </button>
-        </div>
-
+      {/* Prices List */}
+      <section className="flex flex-col gap-3 min-h-[400px]">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <Loader2 className="w-10 h-10 animate-spin text-zinc-300" />
-            <p className="text-zinc-400 font-bold uppercase tracking-widest text-xs">Syncing with Mandis...</p>
+          <div className="flex-1 flex flex-col items-center justify-center py-20 gap-4 opacity-50">
+             <div className="w-12 h-12 border-4 border-agri-border border-t-agri-primary rounded-full animate-spin" />
+             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Synchronizing Live Data</p>
           </div>
-        ) : crops.map((crop, i) => (
-          <Card key={i} className="flex items-center gap-4 py-6 pr-8 border-zinc-200 hover:border-zinc-400 transition-colors cursor-pointer group">
-            <div className="w-16 h-16 rounded-2xl bg-zinc-50 border border-zinc-100 flex items-center justify-center shrink-0 group-hover:bg-zinc-900 group-hover:text-white transition-colors">
-               <span className="material-symbols-outlined text-3xl font-light">
-                 {crop.name.includes('Wheat') ? 'grass' : 
-                  crop.name.includes('Rice') ? 'eco' : 
-                  crop.name.includes('Onion') ? 'nutrition' : 
-                  crop.name.includes('Cotton') ? 'potted_plant' : 'psychiatry'}
-               </span>
+        ) : error ? (
+           <div className="bg-red-50 border border-red-100 p-8 rounded-3xl text-center">
+              <p className="text-red-600 font-bold text-sm">{error}</p>
+              <button onClick={fetchPrices} className="mt-4 text-xs font-black uppercase tracking-widest text-red-500 underline">Retry Connection</button>
+           </div>
+        ) : filteredCrops.length > 0 ? (
+          filteredCrops.map((crop, i) => (
+            <div key={i} className="bg-white border border-agri-border p-4 rounded-2xl flex items-center gap-4 hover:border-agri-accent transition-all group cursor-pointer shadow-sm">
+               <div className="w-12 h-12 rounded-xl bg-agri-surface flex items-center justify-center text-agri-primary group-hover:bg-agri-primary group-hover:text-white transition-colors">
+                  <span className="material-symbols-outlined text-2xl">
+                    {crop.name.toLowerCase().includes('wheat') ? 'grass' : 
+                     crop.name.toLowerCase().includes('rice') || crop.name.toLowerCase().includes('paddy') ? 'eco' : 
+                     crop.name.toLowerCase().includes('onion') || crop.name.toLowerCase().includes('potato') || crop.name.toLowerCase().includes('tomato') ? 'nutrition' : 'psychiatry'}
+                  </span>
+               </div>
+               <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-display font-black text-zinc-800 truncate leading-tight uppercase tracking-tight">{crop.name.split('(')[0]}</h4>
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-0.5">{crop.mandi.split(',')[0]} / {crop.state || 'Local'}</p>
+               </div>
+               <div className="text-right">
+                  <p className="text-lg font-display font-black text-agri-primary">₹{crop.price}</p>
+                  <div className={cn(
+                    "flex items-center justify-end gap-1 text-[9px] font-black px-1.5 py-0.5 rounded-lg border",
+                    crop.status === 'up' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
+                    crop.status === 'down' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-zinc-50 text-zinc-400 border-zinc-100'
+                  )}>
+                    {crop.status === 'up' ? '↗' : crop.status === 'down' ? '↘' : '—'} 
+                    <span>{crop.status === 'neutral' ? 'STABLE' : 'WATCH'}</span>
+                  </div>
+               </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="text-lg font-bold text-zinc-900 truncate">{crop.name}</h4>
-              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest truncate">{crop.mandi}</p>
-            </div>
-            <div className="text-right shrink-0">
-              <div className={cn(
-                "text-2xl font-black tracking-tighter",
-                crop.status === 'up' ? 'text-emerald-600' : crop.status === 'down' ? 'text-red-600' : 'text-zinc-900'
-              )}>₹{crop.price}</div>
-              <div className={cn(
-                "flex items-center justify-end gap-1 font-bold text-[10px] uppercase tracking-widest",
-                crop.status === 'up' ? 'text-emerald-500' : crop.status === 'down' ? 'text-red-500' : 'text-zinc-400'
-              )}>
-                {crop.status === 'up' ? <TrendingUp className="w-3 h-3" /> : 
-                 crop.status === 'down' ? <TrendingDown className="w-3 h-3" /> : 
-                 <Minus className="w-3 h-3" />}
-                {crop.change}
-              </div>
-            </div>
-          </Card>
-        ))}
-        {!loading && crops.length === 0 && (
-          <div className="text-center py-10">
-            <p className="text-zinc-400 font-bold">No market data available.</p>
+          ))
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center py-20 opacity-30 grayscale">
+             <span className="material-symbols-outlined text-6xl">search_off</span>
+             <p className="text-xs font-bold mt-4">No results found for your filters</p>
           </div>
         )}
       </section>
 
-      <Button fullWidth variant="primary" className="h-16 font-black uppercase tracking-widest text-xs rounded-2xl mt-4">
-        <span className="material-symbols-outlined text-xl">analytics</span>
-        Weekly Forecast Report
-      </Button>
+      {/* Forecast Modal */}
+      {showForecast && (
+        <div className="fixed inset-0 z-50 bg-white overflow-y-auto px-6 py-12 flex flex-col">
+           <div className="flex justify-between items-center mb-8 border-b border-agri-border pb-4">
+              <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 rounded-xl bg-agri-primary text-white flex items-center justify-center shadow-lg shadow-agri-primary/20">
+                    <TrendingUp className="w-6 h-6" />
+                 </div>
+                 <h2 className="text-xl font-display font-black text-agri-primary uppercase">Market Forecast</h2>
+              </div>
+              <button 
+                onClick={() => setShowForecast(false)}
+                className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center"
+              >
+                 <X className="w-5 h-5 text-zinc-500" />
+              </button>
+           </div>
+           
+           {loadingForecast ? (
+             <div className="flex-1 flex flex-col items-center justify-center gap-6">
+                <div className="w-20 h-20 border-4 border-agri-surface border-t-agri-accent rounded-full animate-spin" />
+                <div className="text-center">
+                   <p className="text-lg font-display font-black text-zinc-800 uppercase">Generating Report</p>
+                   <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Analyzing historical patterns...</p>
+                </div>
+             </div>
+           ) : (
+             <div className="flex-1">
+                <div className="markdown-body">
+                   <Markdown remarkPlugins={[remarkGfm]}>{forecast}</Markdown>
+                </div>
+                <button 
+                  onClick={() => setShowForecast(false)}
+                  className="w-full h-14 bg-agri-primary text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs mt-12 mb-8 shadow-xl"
+                >
+                  Close Analysis
+                </button>
+             </div>
+           )}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,139 +1,230 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Upload, Info, Loader2, Lightbulb, CheckCircle2 } from 'lucide-react';
+import { Camera, Upload, Info, Loader2, Lightbulb, CheckCircle2, X } from 'lucide-react';
 import { Card, Button } from '../components/ui/Base';
 import { Header } from '../components/Layout';
+import { cn } from '../lib/utils';
+import ReactMarkdown from 'react-markdown';
 
 export const ScanPage: React.FC = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const handleScan = async () => {
+  const handleCaptureClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+      processImage(file);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const processImage = async (file: File) => {
     setScanning(true);
     setResult(null);
+
     try {
+      const base64 = await fileToBase64(file);
+      const mimeType = file.type;
+
       const response = await fetch('/api/ai/identify-pest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          image: base64.split(',')[1], // Remove the data:image/png;base64, part
+          mimeType 
+        }),
       });
+      
       const data = await response.json();
       setResult(data.analysis);
     } catch (err) {
       console.error('Scan error:', err);
-      setResult("Unable to identify pest at this moment. Please try again.");
+      setResult("### ⚠️ Connection Error\nUnable to reach the AI diagnostics server. Please check your internet connection and try again.");
     } finally {
       setScanning(false);
     }
   };
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
   const commonPests = [
-    { name: 'Aphids', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDXyDqMC17jg94umKNHMERNy6TDWwfSR43kezpKF0yA7g2JQhEUVlOv1pwBRyyDK_Wn_7GSBXZBKilGc6KGUDiYYwL5qCbdByg8xpwMmIQNZIOX1Yx4NCAcJ5mQJyp1wwUWHhWfsHWaBk3nRgWMUgBoNfNA1xz0ANnIuB6e391Sl-cePvTpl8cjjjpknbFHOAPeV9IrXsn4VQAnHc7_2HRfgu5I5_zllC2iGuI25QcrPC0vaM_ieJGvtxKR5vMCT0wgmQyYUuEoJ9fY' },
-    { name: 'Locusts', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCpjfLaOc1bVrhob4yKWIQN5VkVUuK_YB6JlTU3BmRPAsajkT5_639op1w3pYiENiHPwTUf1aas-ODKq6ajrSVTVPZrxKxr0rJFCnoNZ2dVoShGyjffxD9mgxYF_N4PcPjFUaDDnDENPbjCxtJ08ckArASs1nRre1pxFSWZpCWIRhSrDlUSPVKMMgSZd8q9gNPsajWwjE0hOlzDAo7bcpufvsWit1GgO4Nt09D9PCER8NUAGE5YKm-LQU8BdawxpRR2o_S85vpR62xQ' },
-    { name: 'Armyworm', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAPZzAYJiRGZviz7sHvql__OykYO2B_a4jYppEgMqSXjabhItD8obGjkgieNQrbWiyLPl-Gb8TrVvojOXe0Huk1RkGzuQp79RzVYl7Vip3Zuhelconu2YytbwOQFTXMmBHDKfIkK2W3vD98TyM3Xaz42q69lH8DtKNp_ZCIhddvhq9ljfwkOLT0KI_uWIf1mTE1GlCUz-LmUV9h1_NAL5JNnWoD24IjvxKQYO5HuiNdoybChk9qe6U_Fqn-PaEyGvTQMMpCx6VMNrrm' }
+    { name: 'Aphids', image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&q=80&w=300' },
+    { name: 'Locusts', image: 'https://images.unsplash.com/photo-1545129139-1beb780af307?auto=format&fit=crop&q=80&w=300' },
+    { name: 'Whitefly', image: 'https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&q=80&w=300' }
   ];
 
   return (
-    <div className="pt-20 px-4 flex flex-col gap-8 max-w-2xl mx-auto pb-32">
-      <Header title="Identify Pest" showBack />
+    <div className="min-h-screen pt-20 px-6 flex flex-col gap-8 max-w-2xl mx-auto pb-40">
+      <Header title="Diagnostics" showBack />
 
-      {/* Instruction Section */}
-      <section className="text-center space-y-2 pt-4">
-        <h2 className="text-2xl font-bold text-on-surface leading-tight">Take a photo of the pest to identify it</h2>
-        <p className="text-on-surface-variant font-medium opacity-80">AI Analysis provides instant treatment advice.</p>
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        accept="image/*" 
+        capture="environment" 
+        className="hidden" 
+      />
+
+      {/* Header Info */}
+      <section className="flex flex-col gap-2">
+         <h2 className="text-3xl font-display font-black text-agri-primary tracking-tighter uppercase">Visual Diagnosis</h2>
+         <p className="text-sm font-medium text-zinc-500 uppercase tracking-tight">Point your camera at the affected area for instant AI identification.</p>
       </section>
 
-      {/* Camera Viewfinder */}
-      <section className="relative aspect-square w-full bg-surface-dim rounded-[32px] overflow-hidden shadow-organic border-4 border-surface-container-lowest">
-        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-          {/* Framing corners */}
-          <div className="absolute top-8 left-8 w-12 h-12 border-t-4 border-l-4 border-white opacity-80 rounded-tl-lg"></div>
-          <div className="absolute top-8 right-8 w-12 h-12 border-t-4 border-r-4 border-white opacity-80 rounded-tr-lg"></div>
-          <div className="absolute bottom-8 left-8 w-12 h-12 border-b-4 border-l-4 border-white opacity-80 rounded-bl-lg"></div>
-          <div className="absolute bottom-8 right-8 w-12 h-12 border-b-4 border-r-4 border-white opacity-80 rounded-br-lg"></div>
+      {/* Viewfinder Module */}
+      <section className="relative aspect-square w-full bg-zinc-900 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-white/10 group">
+        <div className="absolute inset-0 z-10 p-8 flex flex-col pointer-events-none">
+          {/* HUD Brackets */}
+          <div className="flex-1 border-t-2 border-l-2 border-emerald-500/40 rounded-tl-3xl m-4 transition-all group-hover:scale-105" />
+          <div className="flex-1 border-t-2 border-r-2 border-emerald-500/40 rounded-tr-3xl m-4 absolute top-8 right-8 w-24 h-24" />
+          <div className="flex-1 border-b-2 border-l-2 border-emerald-500/40 rounded-bl-3xl m-4 absolute bottom-8 left-8 w-24 h-24" />
+          <div className="flex-1 border-b-2 border-r-2 border-emerald-500/40 rounded-br-3xl m-4 absolute bottom-8 right-8 w-24 h-24" />
           
-          {/* Scanning line animation */}
+          {/* Scanning Effect */}
           {scanning && (
-            <div className="absolute w-full h-[4px] bg-primary/60 shadow-[0_0_20px_rgba(13,99,27,0.8)] top-0 animate-scan"></div>
+            <div className="absolute inset-x-0 top-0 h-[3px] bg-emerald-400/60 shadow-[0_0_20px_rgba(52,211,153,1)] animate-scan z-20" />
           )}
-          {!scanning && !result && (
-            <div className="absolute w-full h-[2px] bg-primary/40 shadow-[0_0_15px_rgba(13,99,27,0.5)] top-1/2 -translate-y-1/2"></div>
-          )}
+          
+          {/* Status Badge */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3">
+             {!scanning && !result && !previewUrl && (
+               <div className="w-16 h-16 rounded-full border-2 border-white/20 flex items-center justify-center backdrop-blur-sm">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+               </div>
+             )}
+          </div>
         </div>
 
         <img 
-          className={`w-full h-full object-cover contrast-125 transition-all duration-700 ${scanning ? 'blur-sm' : ''}`} 
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuClVwHNC6PY9rwI4r7GP-dkpb-qZvxds-M5FjmgO1Jd0GRP7n5JIxM3g1-F7ydDb2hBN7EKTnnMA5w_xLycFYAZRMcD-CJeephd1D-GXrr3DAdtlBMLTrCvQCPyiGS6omlVZppoTgHYgJyKqOZdLU-yxarlmFxA4zhqmNNIpnIqF5orfbVOQuHaND7R_FpCF-HvRDG3XMiuzsYyxecvSeKLMRYdvJbfNl5cfDBpUxhwTMxBrpiKghvt1d0uNSUPQBzaHcNmtVvAcEot" 
-          alt="Plant Leaf" 
+          className={cn(
+            "w-full h-full object-cover transition-all duration-700", 
+            !previewUrl && "grayscale opacity-60",
+            scanning && "blur-sm scale-110"
+          )} 
+          src={previewUrl || "https://images.unsplash.com/photo-1597362871122-391307457ef6?auto=format&fit=crop&q=80&w=1000"} 
+          alt="Plant diagnostic" 
         />
 
-        {result && (
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-20 p-8 flex flex-col justify-center items-center text-center text-white overflow-y-auto">
-            <CheckCircle2 className="w-16 h-16 text-primary mb-4" />
-            <h3 className="text-2xl font-bold mb-4">Analysis Complete</h3>
-            <div className="bg-white/10 p-6 rounded-2xl border border-white/20 whitespace-pre-wrap text-sm leading-relaxed scrollbar-hide flex-1">
-              {result}
-            </div>
-            <Button className="mt-6" variant="primary" onClick={() => setResult(null)}>
-              Scan Again
-            </Button>
-          </div>
-        )}
+        {/* Floating Controls */}
+        <div className="absolute bottom-8 left-8 right-8 z-20 flex justify-between items-center px-6 py-4 bg-black/60 backdrop-blur-2xl rounded-3xl border border-white/10">
+           <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-black text-white/50 uppercase tracking-widest leading-none">Diagnostic Link</span>
+              <span className="text-xs font-bold text-white uppercase">{scanning ? 'Analyzing Sequence...' : previewUrl ? 'Image Captured' : 'Live Feed Ready'}</span>
+           </div>
+           <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-xs font-black text-white uppercase">HD</span>
+           </div>
+        </div>
 
-        {!result && (
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
-            <div className="px-5 py-2 bg-black/70 backdrop-blur-md text-white rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 border border-white/20">
-              <span className="material-symbols-outlined text-[14px]">light_mode</span>
-              {scanning ? 'Analyzing...' : 'Good Light'}
+        {/* Results Overlay */}
+        {result && (
+          <div className="absolute inset-0 bg-agri-primary/95 backdrop-blur-3xl z-30 p-8 flex flex-col pt-12 text-white">
+            <button 
+              onClick={() => {
+                setResult(null);
+                setPreviewUrl(null);
+              }}
+              className="absolute top-6 right-6 w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <div className="flex flex-col items-center text-center mb-8">
+              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-4 shadow-xl ring-1 ring-white/20">
+                 <CheckCircle2 className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-display font-black uppercase tracking-tight">Diagnosis Report</h3>
+              <p className="text-[10px] text-white/60 font-black uppercase tracking-[0.2em]">Scientific AI Analysis</p>
             </div>
+            
+            <div className="flex-1 bg-black/20 p-6 rounded-3xl border border-white/10 overflow-y-auto text-sm font-medium leading-relaxed scrollbar-hide">
+              <div className="markdown-body prose prose-invert prose-sm max-w-none">
+                <ReactMarkdown>{result}</ReactMarkdown>
+              </div>
+            </div>
+
+            <Button 
+              onClick={() => {
+                setResult(null);
+                setPreviewUrl(null);
+                handleCaptureClick();
+              }}
+              className="mt-6 bg-white text-agri-primary h-14 uppercase tracking-widest font-black"
+            >
+              Scan New Area
+            </Button>
           </div>
         )}
       </section>
 
-      {/* Action Buttons */}
+      {/* Main Trigger */}
       {!result && (
-        <section className="grid grid-cols-1 gap-4">
-          <Button fullWidth className="h-14 rounded-full shadow-lg" onClick={handleScan} disabled={scanning}>
-            {scanning ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Identifying...
-              </>
-            ) : (
-              <>
-                <Camera className="w-5 h-5 fill-current" />
-                Take Photo
-              </>
-            )}
-          </Button>
-          <Button variant="ghost" fullWidth className="h-14 rounded-full border border-outline-variant bg-surface-container-lowest">
-            <Upload className="w-5 h-5" />
-            Upload from Gallery
-          </Button>
+        <section className="flex flex-col gap-4">
+          <button 
+            disabled={scanning}
+            onClick={handleCaptureClick}
+            className="w-full h-20 bg-agri-primary text-white rounded-3xl flex items-center justify-center gap-4 shadow-xl shadow-agri-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+          >
+             {scanning ? (
+               <Loader2 className="w-6 h-6 animate-spin" />
+             ) : (
+               <>
+                <Camera className="w-8 h-8" />
+                <div className="text-left">
+                   <p className="text-xs font-black uppercase tracking-widest leading-none mb-1 opacity-60">Run Full Scan</p>
+                   <p className="text-lg font-display font-black uppercase tracking-tighter">Capture Frame</p>
+                </div>
+               </>
+             )}
+          </button>
+          
+          <button 
+            onClick={handleCaptureClick}
+            className="w-full h-14 bg-white border border-agri-border rounded-2xl flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest text-zinc-500 hover:bg-agri-surface active:scale-95 transition-all"
+          >
+             <Upload className="w-5 h-5" />
+             Import Laboratory Image
+          </button>
         </section>
       )}
 
-      {/* Help Tip */}
-      {!result && (
-        <div className="bg-secondary-container/20 text-on-secondary-container p-6 rounded-[24px] flex gap-4 border border-secondary-container/30">
-          <Info className="w-6 h-6 text-secondary shrink-0" />
-          <p className="text-sm font-bold leading-relaxed opacity-80 uppercase tracking-tight">
-            For better results, ensure the pest is in focus and there is plenty of light. Avoid blurry or dark shots.
-          </p>
+      {/* Reference Library */}
+      <section className="flex flex-col gap-4 pb-12">
+        <div className="flex justify-between items-end px-1">
+           <h3 className="text-base font-black text-zinc-800 tracking-tight">Regional Pests</h3>
+           <button className="text-[10px] font-black text-agri-primary uppercase tracking-widest">Global Library</button>
         </div>
-      )}
-
-      {/* Common Pests */}
-      <section className="pb-8">
-        <div className="flex items-center justify-between mb-4 px-1">
-          <h3 className="text-xl font-bold text-on-surface">Common Pests</h3>
-          <button className="text-primary font-bold text-sm hover:underline">View All</button>
-        </div>
-        <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4">
+        <div className="grid grid-cols-2 gap-3">
           {commonPests.map((pest, i) => (
-            <div key={i} className="min-w-[140px] bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm border border-surface-container group cursor-pointer transition-all hover:shadow-md active:scale-95">
-              <img src={pest.image} alt={pest.name} className="w-full h-28 object-cover group-hover:scale-105 transition-transform duration-500" />
-              <p className="p-3 text-[11px] font-black uppercase tracking-widest text-center text-on-surface opacity-80">{pest.name}</p>
+            <div key={i} className="group bg-white border border-agri-border rounded-3xl p-3 flex items-center gap-3 hover:border-agri-primary transition-all cursor-pointer">
+              <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0">
+                 <img src={pest.image} alt={pest.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+              </div>
+              <div className="min-w-0">
+                 <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest mb-0.5">Reference</p>
+                 <p className="text-xs font-black text-zinc-800 uppercase tracking-tighter truncate">{pest.name}</p>
+              </div>
             </div>
           ))}
         </div>

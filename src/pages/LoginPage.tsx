@@ -43,14 +43,14 @@ const LoginPage: React.FC = () => {
     <div className="min-h-screen bg-zinc-50 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center text-white mx-auto mb-4">
-            <span className="material-symbols-outlined text-4xl">agriculture</span>
+          <div className="w-20 h-20 bg-emerald-600 rounded-3xl flex items-center justify-center text-white mx-auto mb-6 shadow-xl shadow-emerald-900/20 rotate-3">
+            <span className="material-symbols-outlined text-5xl">agriculture</span>
           </div>
-          <h1 className="text-3xl font-black text-zinc-900 tracking-tighter">Welcome Back</h1>
-          <p className="text-zinc-500 font-medium mt-2">Log in to manage your farm profile</p>
+          <h1 className="text-3xl font-black text-zinc-900 tracking-tighter">Namaste</h1>
+          <p className="text-zinc-500 font-medium mt-2">Log in to Kisan Sahay</p>
         </div>
 
-        <Card className="!p-8">
+        <Card className="!p-8 !rounded-[2rem] border-agri-border">
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 px-1">Email Address</label>
@@ -61,8 +61,8 @@ const LoginPage: React.FC = () => {
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="w-full h-14 pl-12 pr-4 bg-zinc-50 border border-zinc-200 rounded-2xl font-bold text-zinc-900 focus:ring-2 focus:ring-zinc-900 outline-none transition-all"
+                  placeholder="ramesh@example.com"
+                  className="w-full h-14 pl-12 pr-4 bg-zinc-50 border border-zinc-200 rounded-2xl font-bold text-zinc-900 focus:ring-2 focus:ring-agri-primary outline-none transition-all"
                 />
               </div>
             </div>
@@ -70,7 +70,7 @@ const LoginPage: React.FC = () => {
             <div className="space-y-2">
               <div className="flex justify-between items-end px-1">
                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Password</label>
-                <a href="#" className="text-[10px] font-black uppercase tracking-widest text-zinc-900 hover:underline">Forgot?</a>
+                <a href="#" className="text-[10px] font-black uppercase tracking-widest text-agri-primary hover:underline">Forgot?</a>
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
@@ -80,31 +80,29 @@ const LoginPage: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full h-14 pl-12 pr-4 bg-zinc-50 border border-zinc-200 rounded-2xl font-bold text-zinc-900 focus:ring-2 focus:ring-zinc-900 outline-none transition-all"
+                  className="w-full h-14 pl-12 pr-4 bg-zinc-50 border border-zinc-200 rounded-2xl font-bold text-zinc-900 focus:ring-2 focus:ring-agri-primary outline-none transition-all"
                 />
               </div>
             </div>
 
             {error && (
-              <p className="text-red-500 text-xs font-bold text-center bg-red-50 py-2 rounded-lg">{error}</p>
+              <p className="text-red-500 text-xs font-bold text-center bg-red-50 py-3 rounded-xl border border-red-100">{error}</p>
             )}
 
-            <Button 
-              fullWidth 
-              variant="primary" 
+            <button 
               type="submit"
-              className="h-14 uppercase tracking-widest text-xs font-black"
               disabled={loading}
+              className="w-full h-14 bg-agri-primary text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-emerald-900/10 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
             >
-              {loading ? 'Authenticating...' : 'Sign In'}
-              {!loading && <ArrowRight className="w-4 h-4" />}
-            </Button>
+              {loading ? 'Entering...' : 'Log In'}
+              {!loading && <ArrowRight className="w-5 h-5" />}
+            </button>
           </form>
         </Card>
 
         <p className="text-center text-sm font-bold text-zinc-500">
           New to Kisan Sahay? {' '}
-          <Link to="/signup" className="text-zinc-900 hover:underline">Create an account</Link>
+          <Link to="/signup" className="text-agri-primary hover:underline font-black">Create account</Link>
         </p>
 
         <button 

@@ -1,93 +1,38 @@
-@import url('https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,100..900;1,100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Public Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Public Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-inter: "Inter", sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  /* Brand Colors - Bento Zinc Theme */
-  --color-surface: #f4f4f5;
-  --color-surface-dim: #e4e4e7;
-  --color-surface-bright: #fafafa;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f4f4f5;
-  --color-surface-container: #e4e4e7;
-  --color-surface-container-high: #d4d4d8;
-  --color-surface-container-highest: #a1a1aa;
-  --color-on-surface: #09090b;
-  --color-on-surface-variant: #52525b;
-  --color-inverse-surface: #18181b;
-  --color-inverse-on-surface: #f4f4f5;
-  --color-outline: #71717a;
-  --color-outline-variant: #e4e4e7;
-  --color-surface-tint: #18181b;
+  /* Industrial Agri-Intelligence Palette */
+  --color-agri-primary: #064E3B; /* Deep Emerald */
+  --color-agri-secondary: #F0FDF4; /* Mint tint */
+  --color-agri-accent: #10B981; /* Vibrant Emerald */
+  --color-agri-surface: #FAFAF9; /* Stone base */
+  --color-agri-border: #D1D5DB; /* Gray border */
   
-  --color-primary: #18181b;
-  --color-on-primary: #ffffff;
-  --color-primary-container: #f4f4f5;
-  --color-on-primary-container: #18181b;
-  --color-inverse-primary: #ffffff;
-  
-  --color-secondary: #27272a;
-  --color-on-secondary: #ffffff;
-  --color-secondary-container: #e4e4e7;
-  --color-on-secondary-container: #27272a;
-  
-  --color-tertiary: #3f3f46;
-  --color-on-tertiary: #ffffff;
-  --color-tertiary-container: #f4f4f5;
-  --color-on-tertiary-container: #3f3f46;
-  
-  --color-error: #ef4444;
-  --color-on-error: #ffffff;
-  --color-error-container: #fee2e2;
-  --color-on-error-container: #991b1b;
+  --color-surface-dim: #E7E5E4;
+  --color-surface-bright: #FFFFFF;
+  --color-on-surface: #1C1917;
+  --color-on-surface-variant: #57534E;
 
-  /* Fixed Colors */
-  --color-primary-fixed: #e4e4e7;
-  --color-primary-fixed-dim: #d4d4d8;
-  --color-on-primary-fixed: #09090b;
-  --color-on-primary-fixed-variant: #27272a;
-  --color-secondary-fixed: #f4f4f5;
-  --color-secondary-fixed-dim: #e4e4e7;
-  --color-on-secondary-fixed: #09090b;
-  --color-on-secondary-fixed-variant: #3f3f46;
-  --color-tertiary-fixed: #f4f4f5;
-  --color-tertiary-fixed-dim: #e4e4e7;
-  --color-on-tertiary-fixed: #09090b;
-  --color-on-tertiary-fixed-variant: #52525b;
-
-  --color-background: #f4f4f5;
-  --color-on-background: #09090b;
-  --color-surface-variant: #f4f4f5;
-
-  /* Custom Spacing */
-  --spacing-margin-mobile: 16px;
-  --spacing-gutter-mobile: 12px;
-
-  /* Custom Radii - Bento Grid Standard */
   --radius-2xl: 2rem;
   --radius-xl: 1.5rem;
   --radius-lg: 1rem;
   --radius-md: 0.75rem;
 
-  /* Shadows - Zinc Tint */
-  --shadow-tactile: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-organic: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-
   @keyframes scan {
     from { top: 0; }
     to { top: 100%; }
   }
-
   --animate-scan: scan 2s linear infinite;
 }
 
 @layer base {
   body {
-    @apply bg-background text-on-background font-sans antialiased;
+    @apply bg-agri-surface text-zinc-900 font-sans antialiased;
   }
 }
 
@@ -103,3 +48,20 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Markdown Styling for Forecasts */
+.markdown-body {
+  @apply max-w-none;
+}
+.markdown-body h1 { @apply text-2xl font-display font-black tracking-tight mb-4 mt-6 text-agri-primary; }
+.markdown-body h2 { @apply text-xl font-display font-bold mb-3 mt-5 text-zinc-800; }
+.markdown-body h3 { @apply text-lg font-display font-semibold mb-2 mt-4 text-zinc-700; }
+.markdown-body p { @apply text-sm leading-relaxed mb-4 text-zinc-600; }
+.markdown-body ul { @apply list-disc pl-5 mb-4 space-y-1; }
+.markdown-body li { @apply text-sm text-zinc-600; }
+.markdown-body blockquote { @apply border-l-4 border-agri-accent pl-4 italic my-4 text-zinc-500 bg-zinc-50 py-2 rounded-r-lg; }
+.markdown-body hr { @apply my-8 border-agri-border; }
+.markdown-body table { @apply w-full border-collapse mb-4 rounded-xl overflow-hidden shadow-sm; }
+.markdown-body th { @apply border border-agri-border bg-zinc-50 p-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500; }
+.markdown-body td { @apply border border-agri-border p-3 text-sm text-zinc-600; }
+.markdown-body strong { @apply text-zinc-800 font-semibold; }

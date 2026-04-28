@@ -6,43 +6,42 @@ import { motion } from 'motion/react';
 
 export const Header: React.FC<{ title?: string; showBack?: boolean }> = ({ title, showBack }) => {
   const navigate = useNavigate();
-  const hour = new Date().getHours();
-  const isNight = hour < 5 || hour >= 18;
-
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  
   return (
-    <header className={cn(
-      "fixed top-0 left-0 w-full z-50 h-16 backdrop-blur-md border-b px-4 flex items-center justify-between shadow-sm transition-colors duration-1000",
-      isNight ? "bg-zinc-950/80 border-zinc-800 text-white" : "bg-white/80 border-zinc-200 text-zinc-900"
-    )}>
+    <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl z-50 h-20 bg-white/90 backdrop-blur-md px-6 flex items-center justify-between transition-all duration-500">
       <div className="flex items-center gap-4">
-        {showBack && (
+        {showBack ? (
           <button 
             onClick={() => navigate(-1)}
-            className={cn("p-2 rounded-full transition-colors", isNight ? "hover:bg-zinc-800" : "hover:bg-zinc-100")}
+            className="p-2 rounded-xl transition-colors hover:bg-zinc-100"
           >
-            <ChevronLeft className={cn("w-6 h-6", isNight ? "text-white" : "text-zinc-900")} />
+            <ChevronLeft className="w-5 h-5 text-zinc-900" />
           </button>
+        ) : (
+          <div 
+            onClick={() => navigate('/profile')}
+            className="w-10 h-10 rounded-full border-2 border-agri-border overflow-hidden cursor-pointer active:scale-95 transition-transform"
+          >
+            <img 
+               src="https://images.unsplash.com/photo-1542013985851-9e797e8890ae?auto=format&fit=crop&q=80&w=100" 
+               alt="Profile" 
+               className="w-full h-full object-cover"
+            />
+          </div>
         )}
-        <div className="flex items-center gap-2">
-          {!showBack && (
-            <div className={cn("w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center", isNight ? "bg-zinc-100" : "bg-zinc-900")}>
-               <span className={cn("material-symbols-outlined text-2xl", isNight ? "text-zinc-900" : "text-white")}>agriculture</span>
-            </div>
-          )}
-          <h1 className={cn("text-xl font-bold tracking-tight", isNight ? "text-white" : "text-zinc-900")}>Kisan Sahay</h1>
-        </div>
-        {title && <h2 className="text-lg font-semibold text-zinc-500 line-clamp-1">{title}</h2>}
       </div>
-      <div className="flex items-center gap-2">
-        <button 
-          onClick={() => navigate('/search')}
-          className={cn("p-2 rounded-full transition-colors text-zinc-500", isNight ? "hover:bg-zinc-800" : "hover:bg-zinc-100")}
-        >
-          <SearchIcon className="w-6 h-6" />
-        </button>
-        <button className={cn("p-2 rounded-full transition-colors relative", isNight ? "hover:bg-zinc-800" : "hover:bg-zinc-100")}>
-          <Bell className="w-6 h-6 text-zinc-500" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+
+      <div className="flex-1 text-center">
+         <h1 className="text-base font-black text-agri-primary uppercase tracking-tight">
+           {title || 'Kisan Sahay'}
+         </h1>
+      </div>
+
+      <div className="flex items-center">
+        <button className="p-2 rounded-xl text-zinc-400 relative">
+          <Bell className="w-6 h-6" />
+          <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white">1</span>
         </button>
       </div>
     </header>
@@ -53,8 +52,6 @@ export const BottomNav: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const path = location.pathname;
-  const hour = new Date().getHours();
-  const isNight = hour < 5 || hour >= 18;
 
   const navItems = [
     { label: 'Home', icon: Home, path: '/dashboard' },
@@ -64,51 +61,23 @@ export const BottomNav: React.FC = () => {
   ];
 
   return (
-    <nav className={cn(
-      "fixed bottom-0 left-0 w-full z-50 h-20 backdrop-blur-md border-t rounded-t-[2rem] px-2 flex items-center justify-around shadow-[0_-8px_30px_rgb(0,0,0,0.04)] transition-colors duration-1000",
-      isNight ? "bg-zinc-950/80 border-zinc-800" : "bg-white/80 border-zinc-200"
-    )}>
-      {navItems.slice(0, 2).map((item) => (
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-2xl z-[90] h-20 bg-white border-t border-agri-border flex items-center justify-around shadow-[0_-10px_40px_rgba(0,0,0,0.03)] px-4">
+      {navItems.map((item) => (
         <button
           key={item.label}
           onClick={() => navigate(item.path)}
           className={cn(
-            "flex flex-col items-center justify-center gap-1 transition-all duration-200 p-2",
+            "flex flex-col items-center justify-center gap-1 transition-all duration-300 w-16 h-16 rounded-2xl",
             path === item.path 
-              ? (isNight ? "text-white font-bold" : "text-zinc-900 font-bold") 
-              : "text-zinc-500"
+              ? "text-agri-primary" 
+              : "text-zinc-300 hover:text-zinc-500"
           )}
         >
-          <item.icon className={cn("w-6 h-6", path === item.path && (isNight ? "fill-white/10" : "fill-zinc-900/10"))} />
-          <span className="text-[10px] uppercase tracking-widest font-bold">{item.label}</span>
-        </button>
-      ))}
-
-      <div className="relative -top-8">
-        <button 
-          onClick={() => navigate('/scan')}
-          className={cn(
-            "w-16 h-16 rounded-2xl shadow-xl flex items-center justify-center transition-transform active:scale-95 border-4",
-            isNight ? "bg-zinc-100 text-zinc-900 border-zinc-950" : "bg-zinc-900 text-white border-white"
+          <item.icon className={cn("w-6 h-6", path === item.path && "fill-agri-primary/10")} />
+          <span className={cn("text-[9px] uppercase tracking-widest font-black")}>{item.label}</span>
+          {path === item.path && (
+            <div className="w-1 h-1 bg-agri-primary rounded-full mt-0.5" />
           )}
-        >
-          <Camera className="w-8 h-8" />
-        </button>
-      </div>
-
-      {navItems.slice(2).map((item) => (
-        <button
-          key={item.label}
-          onClick={() => navigate(item.path)}
-          className={cn(
-            "flex flex-col items-center justify-center gap-1 transition-all duration-200 p-2",
-            path === item.path 
-              ? (isNight ? "text-white font-bold" : "text-zinc-900 font-bold") 
-              : "text-zinc-500"
-          )}
-        >
-          <item.icon className={cn("w-6 h-6", path === item.path && (isNight ? "fill-white/10" : "fill-zinc-900/10"))} />
-          <span className="text-[10px] uppercase tracking-widest font-bold">{item.label}</span>
         </button>
       ))}
     </nav>
