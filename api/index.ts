@@ -13,6 +13,10 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const projectRoot = path.join(__dirname, '..');
+
+// Load .env from root if exists
+dotenv.config({ path: path.join(projectRoot, '.env') });
 
 // Lazy-initialize Gemini to handle missing/invalid keys gracefully
 const getGenAI = () => {
@@ -505,10 +509,11 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
+      root: projectRoot,
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    const distPath = path.join(projectRoot, 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
