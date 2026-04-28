@@ -43,38 +43,21 @@ const getGenAI = () => {
   return new GoogleGenAI({ apiKey: key });
 };
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+const app = express();
+const PORT = 3000;
 
-  // MongoDB Connection
-  const MONGODB_URI = process.env.MONGODB_URI;
-  if (!MONGODB_URI || (!MONGODB_URI.startsWith('mongodb://') && !MONGODB_URI.startsWith('mongodb+srv://'))) {
-    console.warn('---------------------------------------------------------');
-    console.warn('WARNING: MONGODB_URI is missing or has an invalid scheme.');
-    console.warn('Please provide a valid MongoDB connection string in the Settings menu.');
-    console.warn('The app will continue to run in "Demo Mode" without database persistence.');
-    console.warn('---------------------------------------------------------');
-  } else {
-    try {
-      await mongoose.connect(MONGODB_URI);
-      console.log('Connected to MongoDB');
-    } catch (err: any) {
-      console.error('---------------------------------------------------------');
-      console.error('MONGODB CONNECTION ERROR:', err.message);
-      if (err.name === 'MongooseServerSelectionError') {
-        console.error('\nPOSSIBLE CAUSE: Your IP address is not whitelisted in MongoDB Atlas.');
-        console.error('FIX: Go to MongoDB Atlas > Network Access > Add IP Address > "Allow Access From Anywhere" (0.0.0.0/0).');
-      }
-      console.error('---------------------------------------------------------');
-      console.log('Falling back to Demo Mode (In-memory storage)...');
-    }
-  }
+// Connect to MongoDB
+const MONGODB_URI = process.env.MONGODB_URI;
+if (MONGODB_URI && (MONGODB_URI.startsWith('mongodb://') || MONGODB_URI.startsWith('mongodb+srv://'))) {
+  mongoose.connect(MONGODB_URI)
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('MongoDB connection error:', err));
+}
 
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-  // In-memory fallback for Demo Mode
+// In-memory fallback for Demo Mode
   const demoUsers: any[] = [];
   
   // Add a default test user to Demo Mode only if live DB fails
@@ -518,7 +501,7 @@ async function startServer() {
   });
 
   // Vite middleware for development
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production' && process.env.VERCEL !== '1') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
@@ -532,9 +515,11 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
+  // Only listen if not in a Vercel environment
+  if (process.env.VERCEL !== '1') {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  }
 
-startServer();
+export default app;
